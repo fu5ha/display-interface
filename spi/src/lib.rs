@@ -19,6 +19,7 @@ use embedded_hal::{digital::OutputPin, spi::SpiDevice};
 
 type Result = core::result::Result<(), DisplayError>;
 
+#[inline]
 fn send_u8<SPI>(spi: &mut SPI, words: DataFormat<'_>) -> Result
 where
     SPI: SpiDevice,
@@ -43,7 +44,7 @@ where
                 .map_err(|_| DisplayError::BusWriteError)
         }
         DataFormat::U8Iter(iter) => {
-            let mut buf = [0; 32];
+            let mut buf = [0; 8];
             let mut i = 0;
 
             for v in iter.into_iter() {
@@ -64,7 +65,7 @@ where
             Ok(())
         }
         DataFormat::U16LEIter(iter) => {
-            let mut buf = [0; 32];
+            let mut buf = [0; 4];
             let mut i = 0;
 
             for v in iter.map(u16::to_le) {
@@ -86,7 +87,7 @@ where
             Ok(())
         }
         DataFormat::U16BEIter(iter) => {
-            let mut buf = [0; 64];
+            let mut buf = [0; 4];
             let mut i = 0;
             let len = buf.len();
 
@@ -138,6 +139,7 @@ where
     SPI: SpiDevice,
     DC: OutputPin,
 {
+    #[inline]
     fn send_commands(&mut self, cmds: DataFormat<'_>) -> Result {
         // 1 = data, 0 = command
         self.dc.set_low().map_err(|_| DisplayError::DCError)?;
@@ -146,6 +148,7 @@ where
         send_u8(&mut self.spi, cmds)
     }
 
+    #[inline]
     fn send_data(&mut self, buf: DataFormat<'_>) -> Result {
         // 1 = data, 0 = command
         self.dc.set_high().map_err(|_| DisplayError::DCError)?;
